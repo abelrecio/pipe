@@ -1,6 +1,21 @@
 #include<fcntl.h>
 #include <unistd.h>
 
+int     ft_strncmp(const char *s1, const char *s2, size_t n)
+{
+        size_t  i;
+
+        i = 0;
+        while (i < n && (s1[i] || s2[i]))
+        {
+                if (s1[i] != s2[i])
+                        return ((unsigned char)s1[i] - (unsigned char)s2[i]);
+                i++;
+        }
+        return (0);
+}
+
+
 void close_pipe(int	*pipe_fd)
 {
 	close(pipe_fd[0]);
@@ -47,8 +62,12 @@ void execute_second_command(char **argv, int *pipe_fd, char **envp)
 	int	fd_output;
 
 	fd_output = open_output_file(argv[4]);
-	dup2(
-
+	dup2(fd_output, STDOUT_FILENO);
+	close(fd_output);
+	dup2(pipe_fd[0], STDIN_FILENO);
+	close(pipe_fd[0]);
+	close(pipe_fd[1]);
+}
 void	execute_first_command(char	**argv, int	*pipe_fd, char **envp)
 {
 	int	fd_input;
@@ -61,8 +80,23 @@ void	execute_first_command(char	**argv, int	*pipe_fd, char **envp)
 	close(pipe_fd[1]);
 }
 
+char *get_path_from_env(char **envp)
+{
+	int	i;
+	int	j;
 
-int	main(int argc, char *argv[])
+	i = 0;
+	j = 0;
+	while(envp[i] != NULL)
+	{
+		if (!ft_strncmp(envp[i], "PATH=", sizeof("PATH=")))
+			return (envp[i] + 5);
+		i++;
+	}
+	return (NULL);
+}	
+
+int	main(int argc, char *argv[], char *env[])
 {
 	int	fd;
 
